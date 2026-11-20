@@ -24,14 +24,20 @@ namespace GeosBeltTweaks
         {
             var codes = new List<CodeInstruction>(instructions);
             var snap = AccessTools.Method(typeof(PlanetAuxData), nameof(PlanetAuxData.Snap), [typeof(Vector3), typeof(bool)]);
+            var castTerrain = AccessTools.Field(typeof(BuildTool_Path), nameof(BuildTool_Path.castTerrain));
             var snapCalls = new List<int>();
             var objectSnapRadii = new List<int>();
+            var terrainSnaps = new List<int>();
 
             for (int i = 0; i < codes.Count; i++)
             {
                 if (codes[i].Calls(snap))
                 {
                     snapCalls.Add(i);
+                    if (codes[i - 1].LoadsField(castTerrain))
+                    {
+                        terrainSnaps.Add(i);
+                    }
                 }
                 else if (codes[i].opcode == OpCodes.Ldc_R4 && Equals(codes[i].operand, 0.6f))
                 {
@@ -39,17 +45,11 @@ namespace GeosBeltTweaks
                 }
             }
 
-            if (snapCalls.Count != 2 || objectSnapRadii.Count != 2)
+            if (snapCalls.Count != 2 || terrainSnaps.Count != 1 || objectSnapRadii.Count != 2)
             {
                 throw new InvalidOperationException(
-                    $"GeosBeltTweaks half-grid snapping: expected 2 PlanetAuxData.Snap calls and 2 object snap radii in BuildTool_Path.UpdateRaycast, found {snapCalls.Count} and {objectSnapRadii.Count}."
+                    $"GeosBeltTweaks belt cursor: expected 2 PlanetAuxData.Snap calls, 1 taking castTerrain, and 2 object snap radii in BuildTool_Path.UpdateRaycast, found {snapCalls.Count}, {terrainSnaps.Count}, and {objectSnapRadii.Count}."
                 );
-            }
-
-            foreach (int i in snapCalls)
-            {
-                codes[i].opcode = OpCodes.Call;
-                codes[i].operand = AccessTools.Method(typeof(HalfGridBeltSnapPatch), nameof(Snap));
             }
 
             // A half cell is 0.5-0.76 m wide, so the vanilla 0.6 m radius would pull the cursor onto neighboring belts.
@@ -59,10 +59,23 @@ namespace GeosBeltTweaks
                 codes[i].operand = AccessTools.Method(typeof(HalfGridBeltSnapPatch), nameof(GetObjectSnapRadius));
             }
 
+            foreach (int i in snapCalls)
+            {
+                codes[i].opcode = OpCodes.Call;
+                codes[i].operand = AccessTools.Method(typeof(HalfGridBeltSnapPatch), nameof(Snap));
+            }
+
+            // The game's surface probe, cursor, and object snap search all read the terrain-hit snap's result.
+            int terrainSnap = terrainSnaps[0];
+            codes[terrainSnap].opcode = OpCodes.Ldarg_0;
+            codes[terrainSnap].operand = null;
+            codes.Insert(terrainSnap + 1, new CodeInstruction(
+                OpCodes.Call, AccessTools.Method(typeof(BeltTerrainAim), nameof(BeltTerrainAim.Snap))
+            ));
             return codes;
         }
 
-        private static Vector3 Snap(PlanetAuxData aux, Vector3 pos, bool onTerrain)
+        internal static Vector3 Snap(PlanetAuxData aux, Vector3 pos, bool onTerrain)
         {
             Vector3 snapped = aux.Snap(pos, onTerrain);
             PlanetGrid? grid = aux.activeGrid;

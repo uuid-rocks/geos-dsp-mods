@@ -23,6 +23,7 @@ namespace GeosBeltTweaks
         internal static ConfigEntry<bool> MatchStartingBeltTier = null!;
         internal static ConfigEntry<bool> MatchStartingBeltHeight = null!;
         internal static ConfigEntry<bool> ShowBeltPreviewTilt = null!;
+        internal static ConfigEntry<bool> AimBeltsAtBuildHeight = null!;
         internal static ConfigEntry<bool> ToggleBeltSurfaceHeight = null!;
         internal static ConfigEntry<bool> RememberBeltFreeAngleMode = null!;
         internal static ConfigEntry<bool> UnlimitedChainUpgradeRange = null!;
@@ -51,6 +52,12 @@ namespace GeosBeltTweaks
                 "ShowBeltPreviewTilt",
                 true,
                 "Show slope and tilt in belt previews."
+            );
+            AimBeltsAtBuildHeight = Config.Bind(
+                "Building",
+                "AimBeltsAtBuildHeight",
+                true,
+                "Aim ground belts at their build height when the terrain is higher."
             );
             ToggleBeltSurfaceHeight = Config.Bind(
                 "Building",
