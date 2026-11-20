@@ -5,6 +5,7 @@ Adds half-grid snapping, sloped belt starts, height and tier matching, and whole
 | Tweak                         | Effect                                                                                                                            |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Belt preview tilt             | Belt previews show slope and tilt.                                                                                                |
+| Aim at belt height            | Ground belts follow the cursor at their build height on raised terrain.                                                           |
 | Match starting belt height    | New belts start at the height of the belt or splitter you drag from.                                                              |
 | Match starting belt tier      | Extending a belt selects its tier.                                                                                                |
 | Toggle belt surface height    | Numpad 0 toggles between the surface and the previous height in the belt tool. It's the game's reset-height key.                  |
